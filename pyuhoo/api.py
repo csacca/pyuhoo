@@ -1,24 +1,31 @@
 import requests
 import weakref
 
+from aiohttp.hdrs import USER_AGENT
+
 from .const import (
     # _LOG,
-    # API_URL,
-    # AUTH_URL,
     USER_AGENT_PRODUCT,
     USER_AGENT_PRODUCT_VERSION,
     USER_AGENT_SYSTEM_INFORMATION,
+    # CLIENT_ID,
+)
+
+from .endpoints import (
+    API_URL,
+    AUTH_URL,
+    APP_MUST_UPDATE,
+    USER_CONFIG,
+    USER_VERIFY_EMAIL,
+    USER_LOGIN,
 )
 
 
 class UHooAPI(object):
     def __init__(self, session=None):
         self._headers = {
-            "User-Agent": "{0}/{1} ({2})".format(
-                USER_AGENT_PRODUCT,
-                USER_AGENT_PRODUCT_VERSION,
-                USER_AGENT_SYSTEM_INFORMATION,
-            )
+            USER_AGENT: f"{USER_AGENT_PRODUCT}/{USER_AGENT_PRODUCT_VERSION} "
+            + f"({USER_AGENT_SYSTEM_INFORMATION})"
         }
 
         if session is not None:
@@ -29,4 +36,100 @@ class UHooAPI(object):
         self._session = session
 
     def app_must_update(self):
-        pass
+        url = f"{API_URL}{APP_MUST_UPDATE}"
+        payload = {"version": "93"}
+
+        response = self._session.post(url, data=payload, headers=self._headers,)
+
+        if response.ok:
+            return True
+        else:
+            return False
+
+    def user_config(self):
+        url = f"{AUTH_URL}{USER_CONFIG}"
+
+        response = self._session.get(url, headers=self._headers)
+
+        uId = None
+        if response.ok:
+            uId = response.json["uId"]
+
+        return uId
+
+    def user_verify_email(self, username, clientId):
+        url = f"{AUTH_URL}{USER_VERIFY_EMAIL}"
+        payload = {
+            "username": username,
+            "clientId": clientId,
+        }
+
+        response = self._session.post(url, data=payload, headers=self._headers)
+
+        code = None
+        id = None
+        if response.ok:
+            code = response.json()["code"]
+            id = response.json()["id"]
+
+        return code, id
+
+    def user_login(self, username, password, clientId):
+        """Note: password is an encrypted hash of the user's password"""
+        url = f"{AUTH_URL}{USER_LOGIN}"
+        payload = {
+            "username": username,
+            "password": password,
+            "clientId": clientId,
+        }
+
+        response = self._session.post(url, data=payload, headers=self._headers)
+
+        if response.ok:
+            return response.json()
+
+        return None
+
+
+# login_payload = {
+#     'password': enc_password_hash,
+#     'clientId': clientId,
+#     'username': username
+# }
+
+# r = s.post(baseurl_auth + user_login,
+#            data=login_payload,
+#            headers=headers)
+
+# print(r.status_code)
+# print(r.headers)
+# print(r.text)
+
+# token = ''
+# refreshToken = ''
+# if (r.status_code == 200):
+#     r_json = r.json()
+#     if ('token' in r_json):
+#         token = r_json['token']
+#     if ('refreshToken' in r_json):
+#         refreshToken = r_json['refreshToken']
+
+# headers['Authorization'] = 'Bearer {}'.format(refreshToken)
+
+# {
+#   "token": "",
+#   "refreshToken": "",
+#   "deviceId": "",
+#   "name": "",
+#   "lastname": "",
+#   "Role": "mobile users",
+#   "status": 1,
+#   "gdpr": 1,
+#   "language": {
+#     "code": "en",
+#     "name": "English"
+#   },
+#   "Roletype": null,
+#   "companyName": null,
+#   "clientName": null
+# }
