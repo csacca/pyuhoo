@@ -1,14 +1,15 @@
 import requests
 import weakref
 
-from aiohttp.hdrs import USER_AGENT
-
+from aiohttp.hdrs import (
+    AUTHORIZATION,
+    USER_AGENT,
+)
 from .const import (
     _LOG,
     USER_AGENT_PRODUCT,
     USER_AGENT_PRODUCT_VERSION,
     USER_AGENT_SYSTEM_INFORMATION,
-    # CLIENT_ID,
 )
 
 from .endpoints import (
@@ -48,7 +49,7 @@ class APIError(Exception):
         self.response = response
 
 
-class UHooAPI(object):
+class API(object):
     def __init__(self, session=None):
         self._user_agent = (
             f"{USER_AGENT_PRODUCT}"
@@ -80,6 +81,9 @@ class UHooAPI(object):
 
     def _post(self, url, payload=None):
         return self._request("POST", url, payload)
+
+    def set_auth_token(self, token):
+        self._session.headers.update({AUTHORIZATION: f"Bearer {token}"})
 
     def app_must_update(self, version):
         url = f"{API_URL}{APP_MUST_UPDATE}"
