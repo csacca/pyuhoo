@@ -4,7 +4,7 @@ import weakref
 from aiohttp.hdrs import USER_AGENT
 
 from .const import (
-    # _LOG,
+    _LOG,
     USER_AGENT_PRODUCT,
     USER_AGENT_PRODUCT_VERSION,
     USER_AGENT_SYSTEM_INFORMATION,
@@ -19,15 +19,43 @@ from .endpoints import (
     USER_VERIFY_EMAIL,
     USER_LOGIN,
     DATA_LATEST,
+    DATA_HOUR,
+    DEVICE_DATA,
 )
+
+
+class APIError(Exception):
+    def __init__(self, response, msg=None):
+        if response is None:
+            response_content = b""
+        else:
+            try:
+                response_content = response.content
+            except AttributeError:
+                response_content = response.data
+
+        if response_content != b"":
+            if isinstance(response, requests.Response):
+                message = response.json()["error"]
+        else:
+            message = "API Error Occured"
+
+        if msg is not None:
+            message = "API Error Occured: " + msg
+
+        super(APIError, self).__init__(message)
+
+        self.response = response
 
 
 class UHooAPI(object):
     def __init__(self, session=None):
-        self._headers = {
-            USER_AGENT: f"{USER_AGENT_PRODUCT}/{USER_AGENT_PRODUCT_VERSION} "
+        self._user_agent = (
+            f"{USER_AGENT_PRODUCT}"
+            + "/"
+            + f"{USER_AGENT_PRODUCT_VERSION} "
             + f"({USER_AGENT_SYSTEM_INFORMATION})"
-        }
+        )
 
         if session is not None:
             session = weakref.ref(session)
@@ -36,113 +64,84 @@ class UHooAPI(object):
 
         self._session = session
 
-    def app_must_update(self):
+        self._session.headers.update({USER_AGENT: self._user_agent})
+
+    def _request(self, method, url, payload=None):
+        _LOG.debug(f"-> {method} {url}")
+        response = self._session.request(method, url, data=payload)
+        _LOG.debug(f"<- {response.status_code}")
+
+        if not response.ok:
+            raise APIError(response, f"Recieved status code {response.status_code}")
+        return response.json()
+
+    def _get(self, url):
+        return self._request("GET", url)
+
+    def _post(self, url, payload=None):
+        return self._request("POST", url, payload)
+
+    def app_must_update(self, version):
         url = f"{API_URL}{APP_MUST_UPDATE}"
-        payload = {"version": "93"}
+        payload = {"version": version}
 
-        response = self._session.post(url, data=payload, headers=self._headers)
+        response = self._post(url, payload)
 
-        if response.ok:
-            # need to look at response value
-            # when app does not need to update response is '0'
-            return True
-        else:
+        if response == 0:
             return False
+        else:
+            _LOG.debug(f"[app_must_update] recieved non-zero response: {response}")
+            return True
 
     def user_config(self):
         url = f"{AUTH_URL}{USER_CONFIG}"
 
-        response = self._session.get(url, headers=self._headers)
+        response = self._get(url)
+        return response
 
-        response_json = None
-        if response.ok:
-            response_json = response.json()
-
-        return response_json
-
-    def user_verify_email(self, username, clientId):
+    def user_verify_email(self, username, client_id):
         url = f"{AUTH_URL}{USER_VERIFY_EMAIL}"
         payload = {
             "username": username,
-            "clientId": clientId,
+            "clientId": client_id,
         }
 
-        response = self._session.post(url, data=payload, headers=self._headers)
+        response = self._post(url, payload)
+        return response
 
-        response_json = None
-        if response.ok:
-            response_json = response.json()
-
-        return response_json
-
-    def user_login(self, username, password, clientId):
+    def user_login(self, username, password, client_id):
         """Note: password is an encrypted hash of the user's password"""
         url = f"{AUTH_URL}{USER_LOGIN}"
         payload = {
             "username": username,
             "password": password,
-            "clientId": clientId,
+            "clientId": client_id,
         }
 
-        response = self._session.post(url, data=payload, headers=self._headers)
-
-        response_json = None
-        if response.ok:
-            response_json = response.json()
-
-        return response_json
+        response = self._post(url, payload)
+        return response
 
     def data_latest(self):
         url = f"{API_URL}{DATA_LATEST}"
 
-        response = self._session.get(url, headers=self._headers)
+        response = self._get(url)
+        return response
 
-        response_json = None
-        if response.ok:
-            response_json = response.json()
+    def data_hour(self, serial_number, prev_date_time):
+        url = f"{API_URL}{DATA_HOUR}"
+        payload = {
+            "serialNumber": serial_number,
+            "prevDateTime": prev_date_time,
+        }
 
-        return response_json
+        response = self._post(url, payload)
+        return response
 
+    def device_data(self, serial_number):
+        url = f"{API_URL}{DEVICE_DATA}"
+        payload = {
+            "serialNumber": serial_number,
+        }
 
-# login_payload = {
-#     'password': enc_password_hash,
-#     'clientId': clientId,
-#     'username': username
-# }
-
-# r = s.post(baseurl_auth + user_login,
-#            data=login_payload,
-#            headers=headers)
-
-# print(r.status_code)
-# print(r.headers)
-# print(r.text)
-
-# token = ''
-# refreshToken = ''
-# if (r.status_code == 200):
-#     r_json = r.json()
-#     if ('token' in r_json):
-#         token = r_json['token']
-#     if ('refreshToken' in r_json):
-#         refreshToken = r_json['refreshToken']
-
-# headers['Authorization'] = 'Bearer {}'.format(refreshToken)
-
-# {
-#   "token": "",
-#   "refreshToken": "",
-#   "deviceId": "",
-#   "name": "",
-#   "lastname": "",
-#   "Role": "mobile users",
-#   "status": 1,
-#   "gdpr": 1,
-#   "language": {
-#     "code": "en",
-#     "name": "English"
-#   },
-#   "Roletype": null,
-#   "companyName": null,
-#   "clientName": null
-# }
+        response = self._post(url, payload)
+        return response
