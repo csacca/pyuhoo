@@ -18,6 +18,7 @@ from .endpoints import (
     USER_CONFIG,
     USER_VERIFY_EMAIL,
     USER_LOGIN,
+    DATA_LATEST,
 )
 
 
@@ -39,9 +40,11 @@ class UHooAPI(object):
         url = f"{API_URL}{APP_MUST_UPDATE}"
         payload = {"version": "93"}
 
-        response = self._session.post(url, data=payload, headers=self._headers,)
+        response = self._session.post(url, data=payload, headers=self._headers)
 
         if response.ok:
+            # need to look at response value
+            # when app does not need to update response is '0'
             return True
         else:
             return False
@@ -51,11 +54,11 @@ class UHooAPI(object):
 
         response = self._session.get(url, headers=self._headers)
 
-        uId = None
+        response_json = None
         if response.ok:
-            uId = response.json["uId"]
+            response_json = response.json()
 
-        return uId
+        return response_json
 
     def user_verify_email(self, username, clientId):
         url = f"{AUTH_URL}{USER_VERIFY_EMAIL}"
@@ -66,13 +69,11 @@ class UHooAPI(object):
 
         response = self._session.post(url, data=payload, headers=self._headers)
 
-        code = None
-        id = None
+        response_json = None
         if response.ok:
-            code = response.json()["code"]
-            id = response.json()["id"]
+            response_json = response.json()
 
-        return code, id
+        return response_json
 
     def user_login(self, username, password, clientId):
         """Note: password is an encrypted hash of the user's password"""
@@ -85,10 +86,22 @@ class UHooAPI(object):
 
         response = self._session.post(url, data=payload, headers=self._headers)
 
+        response_json = None
         if response.ok:
-            return response.json()
+            response_json = response.json()
 
-        return None
+        return response_json
+
+    def data_latest(self):
+        url = f"{API_URL}{DATA_LATEST}"
+
+        response = self._session.get(url, headers=self._headers)
+
+        response_json = None
+        if response.ok:
+            response_json = response.json()
+
+        return response_json
 
 
 # login_payload = {
