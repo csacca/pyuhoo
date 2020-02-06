@@ -68,9 +68,9 @@ class API(object):
         self._session.headers.update({USER_AGENT: self._user_agent})
 
     def _request(self, method, url, payload=None):
-        _LOG.debug(f"-> {method} {url}")
+        _LOG.debug(f"<- {method} {url}")
         response = self._session.request(method, url, data=payload)
-        _LOG.debug(f"<- {response.status_code}")
+        _LOG.debug(f"-> {response.status_code}")
 
         if not response.ok:
             raise APIError(response, f"Recieved status code {response.status_code}")
