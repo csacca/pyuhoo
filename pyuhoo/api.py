@@ -1,27 +1,25 @@
-import requests
 import weakref
 
-from aiohttp.hdrs import (
-    AUTHORIZATION,
-    USER_AGENT,
-)
+import requests
+
+from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
+
 from .const import (
     _LOG,
     USER_AGENT_PRODUCT,
     USER_AGENT_PRODUCT_VERSION,
     USER_AGENT_SYSTEM_INFORMATION,
 )
-
 from .endpoints import (
     API_URL,
-    AUTH_URL,
     APP_MUST_UPDATE,
-    USER_CONFIG,
-    USER_VERIFY_EMAIL,
-    USER_LOGIN,
-    DATA_LATEST,
+    AUTH_URL,
     DATA_HOUR,
+    DATA_LATEST,
     DEVICE_DATA,
+    USER_CONFIG,
+    USER_LOGIN,
+    USER_VERIFY_EMAIL,
 )
 
 

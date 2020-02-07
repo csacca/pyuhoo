@@ -1,14 +1,11 @@
-import json
-import hashlib
 import codecs
+import hashlib
+import json
+
 from Crypto.Cipher import AES
 
 from .api import API
-
-from .const import (
-    _LOG,
-    CLIENT_ID,
-)
+from .const import _LOG, CLIENT_ID
 
 
 def _json_pp(obj):
