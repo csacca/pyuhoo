@@ -10,5 +10,5 @@ setup(
     author_email="csacca@csacca.net",
     license="MIT",
     packages=["pyuhoo"],
-    install_requires=["requests"],
+    install_requires=list(val.strip() for val in open("requirements.txt")),
 )
