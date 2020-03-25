@@ -1,0 +1,6 @@
+USER_AGENT_PRODUCT: str = "uHoo"
+USER_AGENT_PRODUCT_VERSION: str = "2.0.5.1"
+USER_AGENT_SYSTEM_INFORMATION: str = "Android; Android 9; tablet"
+
+APP_VERSION: int = 93
+CLIENT_ID: str = "Android_0000000000000000_MU"

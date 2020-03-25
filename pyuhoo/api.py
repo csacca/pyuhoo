@@ -1,19 +1,14 @@
-import weakref
+import logging
+from typing import Optional, Union
 
-import requests
-
+from aiohttp import ClientSession, client_exceptions
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
 
-from .const import (
-    _LOG,
-    USER_AGENT_PRODUCT,
-    USER_AGENT_PRODUCT_VERSION,
-    USER_AGENT_SYSTEM_INFORMATION,
-)
+from .consts import USER_AGENT_PRODUCT, USER_AGENT_PRODUCT_VERSION, USER_AGENT_SYSTEM_INFORMATION
 from .endpoints import (
-    API_URL,
+    API_URL_SCAFFOLD,
     APP_MUST_UPDATE,
-    AUTH_URL,
+    AUTH_URL_SCAFFOLD,
     DATA_HOUR,
     DATA_LATEST,
     DEVICE_DATA,
@@ -21,129 +16,100 @@ from .endpoints import (
     USER_LOGIN,
     USER_VERIFY_EMAIL,
 )
-
-
-class APIError(Exception):
-    def __init__(self, response, msg=None):
-        if response is None:
-            response_content = b""
-        else:
-            try:
-                response_content = response.content
-            except AttributeError:
-                response_content = response.data
-
-        if response_content != b"":
-            if isinstance(response, requests.Response):
-                message = response.json()["error"]
-        else:
-            message = "API Error Occured"
-
-        if msg is not None:
-            message = "API Error Occured: " + msg
-
-        super(APIError, self).__init__(message)
-
-        self.response = response
+from .errors import RequestError
+from .util import json_pp
 
 
 class API(object):
-    def __init__(self, session=None):
-        self._user_agent = (
+    """uHoo API"""
+
+    def __init__(self, websession: ClientSession) -> None:
+        self._auth_token: Optional[str] = None
+        self._log: logging.Logger = logging.getLogger("pyuhoo")
+        self._user_agent: str = (
             f"{USER_AGENT_PRODUCT}"
             + "/"
             + f"{USER_AGENT_PRODUCT_VERSION} "
             + f"({USER_AGENT_SYSTEM_INFORMATION})"
         )
+        self._websession: ClientSession = websession
+        pass
 
-        if session is not None:
-            session = weakref.ref(session)
-        else:
-            session = requests.session()
+    async def _request(
+        self, method: str, scaffold: str, endpoint: str, data: Optional[dict] = None
+    ):
+        headers = {}
+        if self._auth_token:
+            headers.update({AUTHORIZATION: f"Bearer {self._auth_token}"})
+        if self._user_agent:
+            headers.update({USER_AGENT: self._user_agent})
 
-        self._session = session
+        self._log.debug(f"[_request] {method} {scaffold}/{endpoint}")
+        if method.lower() == "post":
+            self._log.debug(f"[_request] {json_pp(data)}")
+        async with self._websession.request(
+            method, f"{scaffold}/{endpoint}", headers=headers, data=data
+        ) as resp:
+            try:
+                self._log.debug(f"[_request] {resp.status} {method} {scaffold}/{endpoint}")
+                resp.raise_for_status()
+                return await resp.json()
+            except client_exceptions.ClientError as err:
+                raise RequestError(
+                    f"Error requesting data from {scaffold}/{endpoint}: {err}"
+                ) from None
 
-        self._session.headers.update({USER_AGENT: self._user_agent})
+    def set_auth_token(self, auth_token: str) -> None:
+        self._auth_token = auth_token
 
-    def _request(self, method, url, payload=None):
-        _LOG.debug(f"<- {method} {url}")
-        response = self._session.request(method, url, data=payload)
-        _LOG.debug(f"-> {response.status_code}")
-
-        if not response.ok:
-            raise APIError(response, f"Recieved status code {response.status_code}")
-        return response.json()
-
-    def _get(self, url):
-        return self._request("GET", url)
-
-    def _post(self, url, payload=None):
-        return self._request("POST", url, payload)
-
-    def set_auth_token(self, token):
-        self._session.headers.update({AUTHORIZATION: f"Bearer {token}"})
-
-    def app_must_update(self, version):
-        url = f"{API_URL}{APP_MUST_UPDATE}"
-        payload = {"version": version}
-
-        response = self._post(url, payload)
-
-        if response == 0:
+    async def app_must_update(self, version: int) -> bool:
+        resp: Union[int, dict] = await self._request(
+            "post", API_URL_SCAFFOLD, APP_MUST_UPDATE, data={"version": version}
+        )
+        if resp == 0:
             return False
         else:
-            _LOG.debug(f"[app_must_update] recieved non-zero response: {response}")
+            self._log.debug(f"[app_must_update] recieved non-zero response: {resp}")
             return True
 
-    def user_config(self):
-        url = f"{AUTH_URL}{USER_CONFIG}"
+    async def user_config(self) -> dict:
+        resp: dict = await self._request("get", AUTH_URL_SCAFFOLD, USER_CONFIG)
+        return resp
 
-        response = self._get(url)
-        return response
+    async def user_verify_email(self, username: str, client_id: str) -> dict:
+        resp: dict = await self._request(
+            "post",
+            AUTH_URL_SCAFFOLD,
+            USER_VERIFY_EMAIL,
+            data={"username": username, "clientId": client_id},
+        )
+        return resp
 
-    def user_verify_email(self, username, client_id):
-        url = f"{AUTH_URL}{USER_VERIFY_EMAIL}"
-        payload = {
-            "username": username,
-            "clientId": client_id,
-        }
-
-        response = self._post(url, payload)
-        return response
-
-    def user_login(self, username, password, client_id):
+    async def user_login(self, username: str, password: str, client_id: str) -> dict:
         """Note: password is an encrypted hash of the user's password"""
-        url = f"{AUTH_URL}{USER_LOGIN}"
-        payload = {
-            "username": username,
-            "password": password,
-            "clientId": client_id,
-        }
+        resp: dict = await self._request(
+            "post",
+            AUTH_URL_SCAFFOLD,
+            USER_LOGIN,
+            data={"username": username, "password": password, "clientId": client_id},
+        )
+        return resp
 
-        response = self._post(url, payload)
-        return response
+    async def data_latest(self) -> dict:
+        resp: dict = await self._request("get", API_URL_SCAFFOLD, DATA_LATEST)
+        return resp
 
-    def data_latest(self):
-        url = f"{API_URL}{DATA_LATEST}"
+    async def data_hour(self, serial_number: str, prev_date_time: str) -> dict:
+        resp: dict = await self._request(
+            "post",
+            API_URL_SCAFFOLD,
+            DATA_HOUR,
+            data={"serialNumber": serial_number, "prevDateTime": prev_date_time},
+        )
+        return resp
 
-        response = self._get(url)
-        return response
-
-    def data_hour(self, serial_number, prev_date_time):
-        url = f"{API_URL}{DATA_HOUR}"
-        payload = {
-            "serialNumber": serial_number,
-            "prevDateTime": prev_date_time,
-        }
-
-        response = self._post(url, payload)
-        return response
-
-    def device_data(self, serial_number):
-        url = f"{API_URL}{DEVICE_DATA}"
-        payload = {
-            "serialNumber": serial_number,
-        }
-
-        response = self._post(url, payload)
-        return response
+    async def device_data(self, serial_number: str) -> dict:
+        resp: dict = await self._request(
+            "post", API_URL_SCAFFOLD, DEVICE_DATA, data={"serialNumber": serial_number}
+        )
+        return resp
