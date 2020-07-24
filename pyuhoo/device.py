@@ -52,7 +52,7 @@ class Device(object):
         self.dust = data["dust"]["value"]
         self.humidity = data["humidity"]["value"]
         self.no2 = data["no2"]["value"]
-        self.ozone = data["ozone"]
+        self.ozone = data["ozone"]["value"]
         self.pressure = data["pressure"]["value"]
         self.temp = data["temp"]["value"]
         self.timestamp = data["timestamp"]
