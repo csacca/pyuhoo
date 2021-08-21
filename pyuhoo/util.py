@@ -2,9 +2,10 @@
 import json
 from codecs import decode, encode
 from hashlib import md5, sha256
-from typing import Any
+from typing import Any, cast
 
 from Crypto.Cipher import AES
+from Crypto.Cipher._mode_ecb import EcbMode
 from Crypto.Util.Padding import pad
 
 
@@ -25,10 +26,10 @@ def encrypted_hash(code: str, pt_hash: str) -> str:
     code_hash.update(bytes(code, "utf-8"))
     code_hash_hex: str = code_hash.hexdigest()
 
-    key: str = decode(code_hash_hex, "hex")
+    key: bytes = decode(bytes(code_hash_hex, "utf-8"), "hex")
 
     pt_hash_padded: bytes = pad(bytes(pt_hash, "utf-8"), 16)
 
-    cipher: AES = AES.new(key, AES.MODE_ECB)
-    ct = cipher.encrypt(pt_hash_padded)
+    cipher: EcbMode = cast(EcbMode, AES.new(key, AES.MODE_ECB))
+    ct: bytes = cipher.encrypt(pt_hash_padded)
     return str(encode(ct, "hex"), "utf-8")

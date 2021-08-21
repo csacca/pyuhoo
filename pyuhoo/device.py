@@ -1,10 +1,13 @@
+from typing import Any
+
+
 class Device(object):
     def __init__(self, device: dict) -> None:
         self.calibration: int
         self.created_at: str  # "YYYY-MM-DDThh:mm:ss.sssZ" UTC time
-        self.home: any  # type unknown
-        self.latitude: any  # type unknown
-        self.longitude: any  # type unknown
+        self.home: Any  # type unknown
+        self.latitude: Any  # type unknown
+        self.longitude: Any  # type unknown
         self.mac_address: str
         self.name: str
         self.serial_number: str
@@ -28,9 +31,7 @@ class Device(object):
         self.timestamp = -1
 
     def __repr__(self):
-        return (
-            f"<{self.__module__}.{self.__class__.__name__} serial_number: {self.serial_number!r}>"
-        )
+        return f"<{self.__module__}.{self.__class__.__name__} serial_number: {self.serial_number!r}>"
 
     def update_device(self, device: dict) -> None:
         self.calibration = device["calibration"]
