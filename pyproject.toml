@@ -24,7 +24,7 @@ mypy = "^0.910"
 pre-commit = "^2.14.0"
 safety = "^1.10.3"
 pytest = "^6.2.4"
-pytest-aiohttp = "^0.3.0"
+pytest-asyncio = "^0.15.1"
 
 [tool.isort]
 profile = "black"
