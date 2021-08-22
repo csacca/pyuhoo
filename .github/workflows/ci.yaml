@@ -37,8 +37,9 @@ jobs:
         run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
 
       - name: 🏗 Install poetry
-        shell: bash
-        run: curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 - -y
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.1.8
 
       - name: 🔧 Set up cache
         uses: actions/cache@v2
@@ -54,8 +55,8 @@ jobs:
 
       - name: 🏗 Install dependencies
         shell: bash
-        run: python -m poetry install
+        run: poetry install
 
       - name: ✅ Run pytest
         shell: bash
-        run: python -m poetry run python -m pytest -p no:sugar -v tests/
+        run: poetry run python -m pytest -p no:sugar -v tests/
