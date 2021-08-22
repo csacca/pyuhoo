@@ -58,7 +58,7 @@ async def example(username, password):
     prompt=True,
     hide_input=True,
     confirmation_prompt=False,
-    help="Your uHoo password",
+    help="uHoo password",
 )
 @click.option("--debug", is_flag=True)
 def cli(username, password, debug):
