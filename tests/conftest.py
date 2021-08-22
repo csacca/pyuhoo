@@ -5,9 +5,9 @@ import pytest
 
 @pytest.fixture(scope="module")
 def username():
-    return os.getenv("USERNAME")
+    return os.getenv("UHOO_USERNAME")
 
 
 @pytest.fixture(scope="module")
 def password():
-    return os.getenv("PASSWORD")
+    return os.getenv("UHOO_PASSWORD")
