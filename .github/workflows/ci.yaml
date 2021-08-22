@@ -59,4 +59,7 @@ jobs:
 
       - name: ✅ Run pytest
         shell: bash
+        env:
+          UHOO_USERNAME: ${{secrets.UHOO_USERNAME}}
+          UHOO_PASSWORD: ${{secrets.UHOO_PASSWORD}}
         run: poetry run python -m pytest -p no:sugar -v tests/
