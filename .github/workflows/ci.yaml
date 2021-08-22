@@ -20,7 +20,7 @@ jobs:
       matrix:
         python-version: [3.8, 3.9]
         os: [ubuntu-latest, macos-latest, windows-latest]
-      fail-fast: false
+      fail-fast: true
 
     steps:
       - name: ⤵️ Check out code from GitHub
@@ -34,14 +34,11 @@ jobs:
       - name: 📝 Get full Python version
         id: full-python-version
         shell: bash
-        run: >
-          echo ::set-output name=version::$(python -"import sys; print('-'.join(str(v) for v in sys.version_info))")
+        run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
 
       - name: 🏗 Install poetry
         shell: bash
-        run: |
-          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
-            | python - -y
+        run: curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python - -y
 
       - name: 🔧 Update PATH (not Windows)
         if: ${{ matrix.os != 'Windows' }}
