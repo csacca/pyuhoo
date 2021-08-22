@@ -89,14 +89,16 @@ def verify_keys(expected: List["str"], returned: dict):
 # Check if required environmental variables are defined
 #
 
-if os.getenv("USERNAME") is None:
+if os.getenv("UHOO_USERNAME") is None:
     pytest.skip(
-        "USERNAME not defined, live tests will fail. Skipping.", allow_module_level=True
+        "UHOO_USERNAME not defined, live tests will fail. Skipping.",
+        allow_module_level=True,
     )
 
-if os.getenv("PASSWORD") is None:
+if os.getenv("UHOO_PASSWORD") is None:
     pytest.skip(
-        "PASSWORD not defined, live tests will fail. Skipping.", allow_module_level=True
+        "UHOO_PASSWORD not defined, live tests will fail. Skipping.",
+        allow_module_level=True,
     )
 
 
