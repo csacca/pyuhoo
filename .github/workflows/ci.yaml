@@ -40,16 +40,6 @@ jobs:
         shell: bash
         run: curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python - -y
 
-      - name: 🔧 Update PATH (not Windows)
-        if: ${{ matrix.os != 'Windows' }}
-        shell: bash
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: 🔧 Update PATH for Windows
-        if: ${{ matrix.os == 'Windows' }}
-        shell: bash
-        run: echo "$APPDATA\Python\Scripts" >> $GITHUB_PATH
-
       - name: 🔧 Set up cache
         uses: actions/cache@v2
         id: cache
@@ -64,8 +54,8 @@ jobs:
 
       - name: 🏗 Install dependencies
         shell: bash
-        run: poetry install
+        run: python -m poetry install
 
       - name: ✅ Run pytest
         shell: bash
-        run: poetry run python -m pytest -p no:sugar -q tests/
+        run: python -m poetry run python -m pytest -p no:sugar -v tests/
