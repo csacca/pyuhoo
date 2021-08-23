@@ -137,5 +137,5 @@ class Client(object):
         else:
             return None
 
-    def get_devices(self) -> dict:
+    def get_devices(self) -> Dict[str, Device]:
         return self._devices
