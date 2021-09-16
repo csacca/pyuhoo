@@ -17,7 +17,6 @@ class Device(object):
 
         self.co: float  # might be an int
         self.co2: float  # might be an int
-        self.datetime: str  # "YYYY-MM-DD hh:mm:ss" local time
         self.dust: float
         self.humidity: float
         self.no2: float
@@ -49,7 +48,6 @@ class Device(object):
     def update_data(self, data: dict) -> None:
         self.co = data["co"]["value"]
         self.co2 = data["co2"]["value"]
-        self.datetime = data["datetime"]
         self.dust = data["dust"]["value"]
         self.humidity = data["humidity"]["value"]
         self.no2 = data["no2"]["value"]

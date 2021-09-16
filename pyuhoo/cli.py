@@ -29,7 +29,7 @@ async def example(username, password):
         print("[+] Data from first device:")
         print(
             f"    Serial Number: {device.serial_number}\n"
-            + f"    Timestamp:     {device.datetime}\n"
+            + f"    Timestamp:     {device.timestamp}\n"
             + f"    Temperature:   {device.temp} {client.user_settings_temp}\n"
         )
 
@@ -45,7 +45,7 @@ async def example(username, password):
             print("[+] Data from first device:")
             print(
                 f"    Serial Number: {device.serial_number}\n"
-                + f"    Timestamp:     {device.datetime}\n"
+                + f"    Timestamp:     {device.timestamp}\n"
                 + f"    Temperature:   {device.temp} {client.user_settings_temp}\n"
             )
 
