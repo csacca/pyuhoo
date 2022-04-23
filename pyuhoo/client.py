@@ -117,7 +117,7 @@ class Client(object):
 
         # self._log.debug(f"[data_latest] returned\n{json_pp(data_latest)}")
 
-        self.user_settings_temp = data_latest["userSettings"]["temp"]
+        self.user_settings_temp = data_latest["userSettings"].get("temp",self.user_settings_temp)
 
         device: dict
         for device in data_latest["devices"]:
