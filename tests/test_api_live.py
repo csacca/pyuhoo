@@ -40,9 +40,12 @@ USER_REFRESH_TOKEN_KEYS = [
     "language",
     "Role",
     "paymentStatus",
+    "passwordLastUpdate",
 ]
 
 DATA_LATEST_KEYS = ["devices", "data", "userSettings", "offline", "systemTime"]
+
+DATA_CONSUMER_KEYS = ["devices", "userSettings", "systemTime"]
 
 DATA_LATEST_DATA_KEYS = [
     "serialNumber",
@@ -75,6 +78,27 @@ DATA_LATEST_DEVICES_KEYS = [
     "ssid",
     "status",
     "threshold",
+]
+
+DATA_CONSUMER_DEVICES_KEYS = [
+    "calibration",
+    "city",
+    "city_ios",
+    "createdAt",
+    "home",
+    "latitude",
+    "location",
+    "longitude",
+    "macAddress",
+    "name",
+    "offline",
+    "offline_timestamp",
+    "serialNumber",
+    "server",
+    "ssid",
+    "status",
+    "threshold",
+    "data",
 ]
 
 
@@ -166,6 +190,10 @@ async def results(websession, username, password):
     data_latest: dict = await api.data_latest()
     _results["data_latest"] = data_latest
 
+    # do data_consumer()
+    data_consumer: dict = await api.data_consumer()
+    _results["data_consumer"] = data_consumer
+
     return _results
 
 
@@ -204,6 +232,12 @@ def test_data_latest(results):
     verify_keys(DATA_LATEST_KEYS, data_latest)
 
 
+def test_data_consumer(results):
+    data_consumer: dict = results["data_consumer"]
+
+    verify_keys(DATA_CONSUMER_KEYS, data_consumer)
+
+
 def test_data_latest_data(results):
     data_latest: dict = results["data_latest"]
 
@@ -216,13 +250,37 @@ def test_data_latest_data(results):
         pytest.skip('Skipping: No data to test in data_latest["data"]')
 
 
+def test_data_consumer_data(results):
+    data_consumer: dict = results["data_consumer"]
+
+    assert "devices" in data_consumer.keys()
+
+    if len(data_consumer["devices"]) > 0:
+        data = data_consumer["devices"][0]["data"]
+        verify_keys(DATA_LATEST_DATA_KEYS, data)
+    else:
+        pytest.skip('Skipping: No devices to test in data_consumer["devices"]')
+
+
 def test_data_latest_devices(results):
     data_latest: dict = results["data_latest"]
 
     assert "devices" in data_latest.keys()
 
     if len(data_latest["devices"]) > 0:
-        devices = data_latest["devices"][0]
-        verify_keys(DATA_LATEST_DEVICES_KEYS, devices)
+        device = data_latest["devices"][0]
+        verify_keys(DATA_LATEST_DEVICES_KEYS, device)
     else:
         pytest.skip('Skipping: No devices to test in data_latest["devices"]')
+
+
+def test_data_consumer_devices(results):
+    data_consumer: dict = results["data_consumer"]
+
+    assert "devices" in data_consumer.keys()
+
+    if len(data_consumer["devices"]) > 0:
+        device = data_consumer["devices"][0]
+        verify_keys(DATA_CONSUMER_DEVICES_KEYS, device)
+    else:
+        pytest.skip('Skipping: No devices to test in data_consumer["devices"]')

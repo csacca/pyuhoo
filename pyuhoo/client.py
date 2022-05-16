@@ -97,7 +97,7 @@ class Client(object):
 
     async def get_latest_data(self) -> None:
         try:
-            data_latest: dict = await self._api.data_latest()
+            data_latest: dict = await self._api.data_consumer()
         except UnauthorizedError:
             self._log.debug(
                 "\033[93m"
@@ -105,7 +105,7 @@ class Client(object):
                 + "\033[0m"
             )
             await self.refresh_token()
-            data_latest = await self._api.data_latest()
+            data_latest = await self._api.data_consumer()
         except ForbiddenError:
             self._log.debug(
                 "\033[93m"
@@ -113,7 +113,7 @@ class Client(object):
                 + "\033[0m"
             )
             await self.refresh_token()
-            data_latest = await self._api.data_latest()
+            data_latest = await self._api.data_consumer()
 
         # self._log.debug(f"[data_latest] returned\n{json_pp(data_latest)}")
 
@@ -124,12 +124,7 @@ class Client(object):
             serial_number: str = device["serialNumber"]
             if serial_number not in self._devices:
                 self._devices[serial_number] = Device(device)
-
-        for data in data_latest["data"]:
-            serial_number = data["serialNumber"]
-            device_obj: Device = self._devices[serial_number]
-            if device_obj.timestamp < data["timestamp"]:
-                device_obj.update_data(data)
+                self._devices[serial_number].update_data(device["data"])
 
     def get_device(self, serial_number) -> Optional[Device]:
         if serial_number in self._devices:
