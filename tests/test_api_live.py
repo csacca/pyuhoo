@@ -40,7 +40,7 @@ USER_REFRESH_TOKEN_KEYS = [
     "language",
     "Role",
     "paymentStatus",
-    "passwordLastUpdate"
+    "passwordLastUpdate",
 ]
 
 DATA_LATEST_KEYS = ["devices", "data", "userSettings", "offline", "systemTime"]
@@ -98,7 +98,7 @@ DATA_CONSUMER_DEVICES_KEYS = [
     "ssid",
     "status",
     "threshold",
-    "data"
+    "data",
 ]
 
 
@@ -231,10 +231,12 @@ def test_data_latest(results):
 
     verify_keys(DATA_LATEST_KEYS, data_latest)
 
+
 def test_data_consumer(results):
     data_consumer: dict = results["data_consumer"]
 
     verify_keys(DATA_CONSUMER_KEYS, data_consumer)
+
 
 def test_data_latest_data(results):
     data_latest: dict = results["data_latest"]
@@ -270,6 +272,7 @@ def test_data_latest_devices(results):
         verify_keys(DATA_LATEST_DEVICES_KEYS, device)
     else:
         pytest.skip('Skipping: No devices to test in data_latest["devices"]')
+
 
 def test_data_consumer_devices(results):
     data_consumer: dict = results["data_consumer"]
