@@ -15,6 +15,7 @@ from .endpoints import (
     AUTH_URL_SCAFFOLD,
     DATA_HOUR,
     DATA_LATEST,
+    DATA_CONSUMER,
     DEVICE_DATA,
     USER_CONFIG,
     USER_LOGIN,
@@ -138,6 +139,10 @@ class API(object):
 
     async def data_latest(self) -> dict:
         resp: dict = await self._request("get", API_URL_SCAFFOLD, DATA_LATEST)
+        return resp
+
+    async def data_consumer(self) -> dict:
+        resp: dict = await self._request("get", API_URL_SCAFFOLD, DATA_CONSUMER)
         return resp
 
     async def data_hour(self, serial_number: str, prev_date_time: str) -> dict:
