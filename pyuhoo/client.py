@@ -101,18 +101,18 @@ class Client(object):
         except UnauthorizedError:
             self._log.debug(
                 "\033[93m"
-                + "[get_latest_data] received 401 error, refreshing token and trying again"
+                + "[get_latest_data] received 401 error, attempting to re-login and trying again"
                 + "\033[0m"
             )
-            await self.refresh_token()
+            await self.login()
             data_latest = await self._api.data_latest()
         except ForbiddenError:
             self._log.debug(
                 "\033[93m"
-                + "[get_latest_data] received 403 error, refreshing token and trying again"
+                + "[get_latest_data] received 403 error, attempting to re-login and trying again"
                 + "\033[0m"
             )
-            await self.refresh_token()
+            await self.login()
             data_latest = await self._api.data_latest()
 
         # self._log.debug(f"[data_latest] returned\n{json_pp(data_latest)}")
