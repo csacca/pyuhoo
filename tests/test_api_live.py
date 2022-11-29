@@ -1,12 +1,12 @@
 import asyncio
 import os
+import uuid
 from typing import List
 
 import pytest
 from aiohttp import ClientSession
 
 from pyuhoo.api import API
-from pyuhoo.consts import CLIENT_ID
 from pyuhoo.util import encrypted_hash, salted_hash
 
 #
@@ -136,7 +136,7 @@ async def results(websession, username, password):
     u_id = user_config["uId"]
 
     # do user_verify_email()
-    client_id = CLIENT_ID
+    client_id: str = (uuid.uuid1().hex * 2)[0:48]
     user_verify_email: dict = await api.user_verify_email(username, client_id)
     _results["user_verify_email"] = user_verify_email
 
