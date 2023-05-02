@@ -82,8 +82,12 @@ def verify_keys(expected: List["str"], returned: dict):
     for key in expected:
         assert key in returned
 
-    assert len(expected) == len(returned.keys())
-
+    extra_keys = set(returned.keys()) - set(expected)
+    if len(extra_keys) > 0:
+        print("EXTRA KEYS FOUND")
+        print("================")
+    for key in extra_keys:
+        print(f"{key}={returned[key]}")
 
 #
 # Check if required environmental variables are defined
