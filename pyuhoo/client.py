@@ -126,8 +126,7 @@ class Client(object):
             if serial_number not in self._devices:
                 self._devices[serial_number] = Device(device)
 
-        for data in data_latest["data"]:
-            serial_number = data["serialNumber"]
+            data: dict = device["data"]
             device_obj: Device = self._devices[serial_number]
             if device_obj.timestamp < data["timestamp"]:
                 device_obj.update_data(data)
