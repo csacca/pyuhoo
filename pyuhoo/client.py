@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Dict, Optional
 
 from aiohttp import ClientSession
@@ -6,7 +7,7 @@ from aiohttp import ClientSession
 from pyuhoo.errors import ForbiddenError, UhooError, UnauthorizedError
 
 from .api import API
-from .consts import APP_VERSION, CLIENT_ID
+from .consts import APP_VERSION
 from .device import Device
 from .util import encrypted_hash, json_pp, salted_hash
 
@@ -26,7 +27,7 @@ class Client(object):
             )
 
         self._app_version: int = APP_VERSION
-        self._client_id: str = CLIENT_ID
+        self._client_id: str = (uuid.uuid1().hex * 2)[0:48]
         self._device_id: Optional[str] = None
         self._devices: Dict[str, Device] = {}
         self._username: str = username
@@ -125,8 +126,7 @@ class Client(object):
             if serial_number not in self._devices:
                 self._devices[serial_number] = Device(device)
 
-        for data in data_latest["data"]:
-            serial_number = data["serialNumber"]
+            data: dict = device["data"]
             device_obj: Device = self._devices[serial_number]
             if device_obj.timestamp < data["timestamp"]:
                 device_obj.update_data(data)
