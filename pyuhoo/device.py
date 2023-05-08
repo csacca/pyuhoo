@@ -45,14 +45,25 @@ class Device(object):
         self.ssid = device["ssid"]
         self.status = device["status"]
 
+    # Maps data key values to struct values
+    _DATA_MAPPING = {
+        "co" : "co",
+        "co2" : "co2",
+        "dust" : "dust",
+        "humidity" : "humidity",
+        "no2" : "no2",
+        "ozone" : "ozone",
+        "pressure" : "pressure",
+        "temp" : "temp",
+        "timestamp" : "timestamp",
+        "voc" : "voc",
+    }
+
     def update_data(self, data: dict) -> None:
-        self.co = data["co"]["value"]
-        self.co2 = data["co2"]["value"]
-        self.dust = data["dust"]["value"]
-        self.humidity = data["humidity"]["value"]
-        self.no2 = data["no2"]["value"]
-        self.ozone = data["ozone"]["value"]
-        self.pressure = data["pressure"]["value"]
-        self.temp = data["temp"]["value"]
-        self.timestamp = data["timestamp"]
-        self.voc = data["voc"]["value"]
+        # The format has been changed - now these values return directly.
+        # Since this might not be globally consistent, we'll check each one.
+        for value_name, attr_name in self._DATA_MAPPING.items():
+            if isinstance(data[value_name], dict):
+                setattr(self, attr_name, data[value_name]["value"])
+            else:
+                setattr(self, attr_name, data[value_name])

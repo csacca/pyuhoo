@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyuhoo"
-version = "0.0.6a2"
+version = "0.0.6a3"
 description = "Python API for talking to uHoo consumer API"
 authors = ["Christopher Sacca <csacca@csacca.net>"]
 repository = "https://github.com/csacca/pyuhoo"
