@@ -42,7 +42,7 @@ USER_REFRESH_TOKEN_KEYS = [
     "paymentStatus",
 ]
 
-DATA_LATEST_KEYS = ["devices", "data", "userSettings", "offline", "systemTime"]
+DATA_LATEST_KEYS = ["devices", "systemTime", "userSettings"]
 
 DATA_LATEST_DATA_KEYS = [
     "serialNumber",
@@ -177,7 +177,6 @@ async def results(websession, username, password):
 # Tests
 #
 
-
 def test_user_config(results):
     user_config: dict = results["user_config"]
 
@@ -211,13 +210,11 @@ def test_data_latest(results):
 def test_data_latest_data(results):
     data_latest: dict = results["data_latest"]
 
-    assert "data" in data_latest.keys()
-
-    if len(data_latest["data"]) > 0:
-        data = data_latest["data"][0]
+    assert "devices" in data_latest
+    for device in data_latest["devices"]:
+        assert "data" in device.keys()
+        data = device["data"]
         verify_keys(DATA_LATEST_DATA_KEYS, data)
-    else:
-        pytest.skip('Skipping: No data to test in data_latest["data"]')
 
 
 def test_data_latest_devices(results):

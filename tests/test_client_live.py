@@ -22,21 +22,9 @@ if os.getenv("UHOO_PASSWORD") is None:
         allow_module_level=True,
     )
 
-@pytest.fixture(scope="module")
-def event_loop(request):
-    """Create an instance of the default event loop for each test case."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-@pytest.fixture(scope="module")
-async def websession():
+async def test_get_latest_data(username, password):
     async with ClientSession() as _websession:
-        yield _websession
-
-@pytest.fixture(scope="module")
-async def client(websession, username, password):
-    return Client(username, password, websession)
-
-def test_get_latest_data(client: Client):
-    client.get_latest_data()
+        client = Client(username, password, _websession)
+        await client.login()
+        data = await client.get_latest_data()
+    pass
