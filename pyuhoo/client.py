@@ -3,7 +3,7 @@ from typing import Dict, Optional
 
 from aiohttp import ClientSession
 
-from pyuhoo.errors import ForbiddenError, UhooError, UnauthorizedError
+from pyuhoo.errors import ForbiddenError, RequestError, UhooError, UnauthorizedError
 
 from .api import API
 from .consts import APP_VERSION, CLIENT_ID
@@ -87,29 +87,22 @@ class Client(object):
             self._refresh_token = user_refresh_token["refreshToken"]
             self._api.set_bearer_token(self._refresh_token)
 
-        except UnauthorizedError:
+        except RequestError as e:
             self._log.debug(
                 "\033[91m"
-                + "[refresh_token] received 401 error, attempting to re-login"
+                + "[refresh_token] received {} error, attempting to re-login".format(type(e))
                 + "\033[0m"
             )
+            self._api.set_bearer_token(None)
             await self.login()
 
     async def get_latest_data(self) -> None:
         try:
             data_latest: dict = await self._api.data_latest()
-        except UnauthorizedError:
+        except RequestError as e:
             self._log.debug(
                 "\033[93m"
-                + "[get_latest_data] received 401 error, refreshing token and trying again"
-                + "\033[0m"
-            )
-            await self.refresh_token()
-            data_latest = await self._api.data_latest()
-        except ForbiddenError:
-            self._log.debug(
-                "\033[93m"
-                + "[get_latest_data] received 403 error, refreshing token and trying again"
+                + "[get_latest_data] received {} error, refreshing token and trying again".format(type(e))
                 + "\033[0m"
             )
             await self.refresh_token()
@@ -125,7 +118,8 @@ class Client(object):
             if serial_number not in self._devices:
                 self._devices[serial_number] = Device(device)
 
-        for data in data_latest["data"]:
+            data = device["data"]
+
             serial_number = data["serialNumber"]
             device_obj: Device = self._devices[serial_number]
             if device_obj.timestamp < data["timestamp"]:
