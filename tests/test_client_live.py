@@ -26,5 +26,8 @@ async def test_get_latest_data(username, password):
     async with ClientSession() as _websession:
         client = Client(username, password, _websession)
         await client.login()
-        data = await client.get_latest_data()
-    pass
+        await client.get_latest_data()
+
+    devices = client.get_devices()
+    for device in devices.values():
+        print(device)
