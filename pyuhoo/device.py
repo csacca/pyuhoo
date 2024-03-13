@@ -107,6 +107,8 @@ class Device(object):
         "voc" : "voc",
     }
 
+    _INV_DATA_MAPPING = { attr_name:value_name for value_name, attr_name in _DATA_MAPPING.items() }
+
     def update_data(self, data: dict) -> None:
         # The format has been changed - now these values return directly.
         # Since this might not be globally consistent, we'll check each one.
@@ -115,3 +117,6 @@ class Device(object):
                 setattr(self, attr_name, data[value_name]["value"])
             else:
                 setattr(self, attr_name, data[value_name])
+
+    def get_data(self) -> Dict[str,Any]:
+        return { attr_name:getattr(self,attr_name) for attr_name in self._INV_DATA_MAPPING }
