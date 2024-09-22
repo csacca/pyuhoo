@@ -31,18 +31,34 @@ USER_LOGIN_KEYS = [
     "companyName",
     "clientName",
     "paymentStatus",
+    "paymentExpires",
+    "trialPeriod",
+    "productType",
+    "smartAlert",
+    "paymentRenewStatus",
+    "systemTime",
+    "paymentName",
+    "billingRetry",
 ]
 
 USER_REFRESH_TOKEN_KEYS = [
     "refreshToken",
     "token",
+    "billingRetry",
+    "smartAlert",
     "gdpr",
     "language",
     "Role",
     "paymentStatus",
+    "passwordLastUpdate",
+    "systemTime",
+    "paymentName",
+    "trialPeriod",
+    "paymentRenewStatus",
+    "productType",
 ]
 
-DATA_LATEST_KEYS = ["devices", "data", "userSettings", "offline", "systemTime"]
+DATA_LATEST_KEYS = ["devices", "userSettings", "systemTime"]
 
 DATA_LATEST_DATA_KEYS = [
     "serialNumber",
@@ -59,21 +75,26 @@ DATA_LATEST_DATA_KEYS = [
     "virusScore",
 ]
 DATA_LATEST_DEVICES_KEYS = [
+    "name",
+    "serialNumber",
+    "macAddress",
+    "status",
+    "latitude",
+    "home",
+    "ssid",
+    "longitude",
+    "createdAt",
+    "server",
     "calibration",
+    "location",
     "city",
     "city_ios",
-    "createdAt",
-    "home",
-    "latitude",
-    "location",
-    "longitude",
-    "macAddress",
-    "name",
+    "RoomType",
+    "thresholdName",
+    "thresholdType",
     "offline",
-    "serialNumber",
-    "server",
-    "ssid",
-    "status",
+    "data",
+    "offline_timestamp",
     "threshold",
 ]
 
@@ -123,7 +144,6 @@ async def websession():
 
 @pytest.fixture(scope="module")
 async def results(websession, username, password):
-
     _results = {}
 
     # Create API client
@@ -207,10 +227,10 @@ def test_data_latest(results):
 def test_data_latest_data(results):
     data_latest: dict = results["data_latest"]
 
-    assert "data" in data_latest.keys()
+    assert "devices" in data_latest.keys()
 
-    if len(data_latest["data"]) > 0:
-        data = data_latest["data"][0]
+    if len(data_latest["devices"]) > 0:
+        data = data_latest["devices"][0]["data"]
         verify_keys(DATA_LATEST_DATA_KEYS, data)
     else:
         pytest.skip('Skipping: No data to test in data_latest["data"]')
