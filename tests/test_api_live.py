@@ -7,6 +7,7 @@ import pytest
 from aiohttp import ClientSession
 
 from pyuhoo.api import API
+from pyuhoo.client import Client
 from pyuhoo.util import encrypted_hash, salted_hash
 
 #
@@ -246,3 +247,29 @@ def test_data_latest_devices(results):
         verify_keys(DATA_LATEST_DEVICES_KEYS, devices)
     else:
         pytest.skip('Skipping: No devices to test in data_latest["devices"]')
+
+
+def test_get_user_settings_temp():
+    client = Client("username", "password", None)  # Passa None per la sessione
+
+    # Case userSettings.temp is defined
+    data_latest = {
+        "devices": [{"threshold": {"temp": {"aMax": 104}}}],
+        "userSettings": {"temp": "c"},
+    }
+    assert client.get_user_settings_temp(data_latest) == "c"
+    # Case userSettings.temp is undefined, aMax is 104
+    data_latest = {"devices": [{"threshold": {"temp": {"aMax": 104}}}]}
+    assert client.get_user_settings_temp(data_latest) == "f"
+
+    # Case userSettings.temp is undefined, aMax is not 104
+    data_latest = {"devices": [{"threshold": {"temp": {"aMax": 40}}}]}
+    assert client.get_user_settings_temp(data_latest) == "c"
+
+    # Case userSettings.temp is undefined, aMax is undefined
+    data_latest = {"devices": [{"threshold": {"temp": {}}}]}
+    assert client.get_user_settings_temp(data_latest) is None
+
+    # Case userSettings.temp is undefined, devices is undefined
+    data_latest = {}
+    assert client.get_user_settings_temp(data_latest) is None

@@ -96,6 +96,16 @@ class Client(object):
             )
             await self.login()
 
+    def get_user_settings_temp(self, data_latest):
+        if "userSettings" in data_latest and "temp" in data_latest["userSettings"]:
+            return data_latest["userSettings"]["temp"]
+        if "devices" in data_latest:
+            temp_data = data_latest["devices"][0]["threshold"]["temp"]
+            aMax = temp_data.get("aMax")
+            if aMax is None:
+                return None
+            return "f" if aMax == 104 else "c"
+
     async def get_latest_data(self) -> None:
         try:
             data_latest: dict = await self._api.data_latest()
@@ -118,7 +128,7 @@ class Client(object):
 
         # self._log.debug(f"[data_latest] returned\n{json_pp(data_latest)}")
 
-        self.user_settings_temp = data_latest["userSettings"]["temp"]
+        self.user_settings_temp = self.get_user_settings_temp(data_latest)
 
         device: dict
         for device in data_latest["devices"]:
