@@ -250,7 +250,7 @@ def test_data_latest_devices(results):
 
 
 def test_get_user_settings_temp():
-    client = Client("username", "password", None)  # Passa None per la sessione
+    client = Client("username", "password", None)
 
     # Case userSettings.temp is defined
     data_latest = {
