@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Dict, Optional
 
 from aiohttp import ClientSession
@@ -6,7 +7,7 @@ from aiohttp import ClientSession
 from pyuhoo.errors import ForbiddenError, UhooError, UnauthorizedError
 
 from .api import API
-from .consts import APP_VERSION, CLIENT_ID
+from .consts import APP_VERSION
 from .device import Device
 from .util import encrypted_hash, json_pp, salted_hash
 
@@ -26,7 +27,7 @@ class Client(object):
             )
 
         self._app_version: int = APP_VERSION
-        self._client_id: str = CLIENT_ID
+        self._client_id: str = (uuid.uuid1().hex * 2)[0:48]
         self._device_id: Optional[str] = None
         self._devices: Dict[str, Device] = {}
         self._username: str = username
@@ -95,6 +96,16 @@ class Client(object):
             )
             await self.login()
 
+    def get_user_settings_temp(self, data_latest):
+        if "userSettings" in data_latest and "temp" in data_latest["userSettings"]:
+            return data_latest["userSettings"]["temp"]
+        if "devices" in data_latest:
+            temp_data = data_latest["devices"][0]["threshold"]["temp"]
+            aMax = temp_data.get("aMax")
+            if aMax is None:
+                return None
+            return "f" if aMax == 104 else "c"
+
     async def get_latest_data(self) -> None:
         try:
             data_latest: dict = await self._api.data_latest()
@@ -117,7 +128,7 @@ class Client(object):
 
         # self._log.debug(f"[data_latest] returned\n{json_pp(data_latest)}")
 
-        self.user_settings_temp = data_latest["userSettings"]["temp"]
+        self.user_settings_temp = self.get_user_settings_temp(data_latest)
 
         device: dict
         for device in data_latest["devices"]:
@@ -125,8 +136,7 @@ class Client(object):
             if serial_number not in self._devices:
                 self._devices[serial_number] = Device(device)
 
-        for data in data_latest["data"]:
-            serial_number = data["serialNumber"]
+            data: dict = device["data"]
             device_obj: Device = self._devices[serial_number]
             if device_obj.timestamp < data["timestamp"]:
                 device_obj.update_data(data)
