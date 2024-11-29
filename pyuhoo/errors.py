@@ -13,13 +13,13 @@ class RequestError(UhooError):
     pass
 
 
-class UnauthorizedError(UhooError):
+class UnauthorizedError(RequestError):
     """Define an error for 401 unauthorized responses"""
 
     pass
 
 
-class ForbiddenError(UhooError):
+class ForbiddenError(RequestError):
     """Define an error for 403 forbidden responses"""
 
     pass

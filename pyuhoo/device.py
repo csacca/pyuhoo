@@ -1,19 +1,9 @@
-from typing import Any
+from typing import Any, Dict
 
 
 class Device(object):
     def __init__(self, device: dict) -> None:
-        self.calibration: int
-        self.created_at: str  # "YYYY-MM-DDThh:mm:ss.sssZ" UTC time
-        self.home: Any  # type unknown
-        self.latitude: Any  # type unknown
-        self.longitude: Any  # type unknown
-        self.mac_address: str
-        self.name: str
-        self.serial_number: str
-        self.server: int
-        self.ssid: str
-        self.status: int
+        self._device: Dict[str,Any] = {}
 
         self.co: float  # might be an int
         self.co2: float  # might be an int
@@ -30,29 +20,103 @@ class Device(object):
         self.timestamp = -1
 
     def __repr__(self):
-        return f"<{self.__module__}.{self.__class__.__name__} serial_number: {self.serial_number!r}>"
+        return f"<{self.__module__}.{self.__class__.__name__}(device={repr(self._device)})>"
+
+    @property
+    def calibration(self) -> int:
+        return self._device["calibration"]
+
+    @property
+    def created_at(self) -> str:  # "YYYY-MM-DDThh:mm:ss.sssZ" UTC time
+        return self._device["createdAt"]
+
+    @property
+    def home(self) -> Any: # type unknown
+        return self._device["home"]
+
+    @property
+    def latitude(self) -> Any: # type unknown
+        return self._device["latitude"]
+
+    @property
+    def longitude(self) -> Any: # type unknown
+        return self._device["longitude"]
+
+    @property
+    def mac_address(self) -> str:
+        return self._device["macAddress"]
+
+    @property
+    def name(self) -> str:
+        return self._device["name"]
+
+    @property
+    def serial_number(self) -> str:
+        return self._device["serialNumber"]
+
+    @property
+    def server(self) -> int:
+        return self._device["server"]
+
+    @property
+    def ssid(self) -> str:
+        return self._device["ssid"]
+
+    @property
+    def status(self) -> int:
+        return self._device["status"]
+
+    @property
+    def location(self):
+        return self._device["location"]
+
+    @property
+    def city(self):
+        return self._device["city"]
+
+    @property
+    def city_ios(self):
+        return self._device["city_ios"]
+
+    @property
+    def room_type(self):
+        return self._device["RoomType"]
+
+    @property
+    def offline(self):
+        return self._device["offline"]
+
+    @property
+    def offline_timestamp(self):
+        return self._device["offline_timestamp"]
 
     def update_device(self, device: dict) -> None:
-        self.calibration = device["calibration"]
-        self.created_at = device["createdAt"]
-        self.home = device["home"]
-        self.latitude = device["latitude"]
-        self.longitude = device["longitude"]
-        self.mac_address = device["macAddress"]
-        self.name = device["name"]
-        self.serial_number = device["serialNumber"]
-        self.server = device["server"]
-        self.ssid = device["ssid"]
-        self.status = device["status"]
+        self._device = { k:v for k,v in device.items() if k not in ("data","userSettings","threshold") }
+
+    # Maps data key values to struct values
+    _DATA_MAPPING = {
+        "co" : "co",
+        "co2" : "co2",
+        "dust" : "dust",
+        "humidity" : "humidity",
+        "no2" : "no2",
+        "ozone" : "ozone",
+        "pressure" : "pressure",
+        "temp" : "temp",
+        "timestamp" : "timestamp",
+        "voc" : "voc",
+    }
+
+    _INV_DATA_MAPPING = { attr_name:value_name for value_name, attr_name in _DATA_MAPPING.items() }
 
     def update_data(self, data: dict) -> None:
-        self.co = data["co"]["value"]
-        self.co2 = data["co2"]["value"]
-        self.dust = data["dust"]["value"]
-        self.humidity = data["humidity"]["value"]
-        self.no2 = data["no2"]["value"]
-        self.ozone = data["ozone"]["value"]
-        self.pressure = data["pressure"]["value"]
-        self.temp = data["temp"]["value"]
-        self.timestamp = data["timestamp"]
-        self.voc = data["voc"]["value"]
+        # The format has been changed - now these values return directly.
+        # Since this might not be globally consistent, we'll check each one.
+        for value_name, attr_name in self._DATA_MAPPING.items():
+            if isinstance(data[value_name], dict):
+                setattr(self, attr_name, data[value_name]["value"])
+            else:
+                setattr(self, attr_name, data[value_name])
+
+    def get_data(self) -> Dict[str,Any]:
+        return { attr_name:getattr(self,attr_name) for attr_name in self._INV_DATA_MAPPING }

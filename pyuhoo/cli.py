@@ -30,7 +30,7 @@ async def example(username, password):
         print(
             f"    Serial Number: {device.serial_number}\n"
             + f"    Timestamp:     {device.timestamp}\n"
-            + f"    Temperature:   {device.temp} {client.user_settings_temp}\n"
+            # + f"    Temperature:   {device.temp} {client.user_settings_temp}\n"
         )
 
         while True:
@@ -46,7 +46,7 @@ async def example(username, password):
             print(
                 f"    Serial Number: {device.serial_number}\n"
                 + f"    Timestamp:     {device.timestamp}\n"
-                + f"    Temperature:   {device.temp} {client.user_settings_temp}\n"
+                # + f"    Temperature:   {device.temp} {client.user_settings_temp}\n"
             )
 
 
