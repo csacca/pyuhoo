@@ -4,7 +4,7 @@ import logging
 import click
 from aiohttp import ClientSession
 
-from pyuhoo import Client
+from .client import Client
 
 
 async def init_client(username, password, websession) -> Client:

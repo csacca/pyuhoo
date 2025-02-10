@@ -1,12 +1,13 @@
 import asyncio
 import os
+import uuid
 from typing import List
 
 import pytest
 from aiohttp import ClientSession
 
 from pyuhoo.api import API
-from pyuhoo.consts import CLIENT_ID
+from pyuhoo.client import Client
 from pyuhoo.util import encrypted_hash, salted_hash
 
 #
@@ -31,18 +32,34 @@ USER_LOGIN_KEYS = [
     "companyName",
     "clientName",
     "paymentStatus",
+    "paymentExpires",
+    "trialPeriod",
+    "productType",
+    "smartAlert",
+    "paymentRenewStatus",
+    "systemTime",
+    "paymentName",
+    "billingRetry",
 ]
 
 USER_REFRESH_TOKEN_KEYS = [
     "refreshToken",
     "token",
+    "billingRetry",
+    "smartAlert",
     "gdpr",
     "language",
     "Role",
     "paymentStatus",
+    "passwordLastUpdate",
+    "systemTime",
+    "paymentName",
+    "trialPeriod",
+    "paymentRenewStatus",
+    "productType",
 ]
 
-DATA_LATEST_KEYS = ["devices", "data", "userSettings", "offline", "systemTime"]
+DATA_LATEST_KEYS = ["devices", "userSettings", "systemTime"]
 
 DATA_LATEST_DATA_KEYS = [
     "serialNumber",
@@ -59,21 +76,26 @@ DATA_LATEST_DATA_KEYS = [
     "virusScore",
 ]
 DATA_LATEST_DEVICES_KEYS = [
+    "name",
+    "serialNumber",
+    "macAddress",
+    "status",
+    "latitude",
+    "home",
+    "ssid",
+    "longitude",
+    "createdAt",
+    "server",
     "calibration",
+    "location",
     "city",
     "city_ios",
-    "createdAt",
-    "home",
-    "latitude",
-    "location",
-    "longitude",
-    "macAddress",
-    "name",
+    "RoomType",
+    "thresholdName",
+    "thresholdType",
     "offline",
-    "serialNumber",
-    "server",
-    "ssid",
-    "status",
+    "data",
+    "offline_timestamp",
     "threshold",
 ]
 
@@ -123,7 +145,6 @@ async def websession():
 
 @pytest.fixture(scope="module")
 async def results(websession, username, password):
-
     _results = {}
 
     # Create API client
@@ -136,7 +157,7 @@ async def results(websession, username, password):
     u_id = user_config["uId"]
 
     # do user_verify_email()
-    client_id = CLIENT_ID
+    client_id: str = (uuid.uuid1().hex * 2)[0:48]
     user_verify_email: dict = await api.user_verify_email(username, client_id)
     _results["user_verify_email"] = user_verify_email
 
@@ -207,10 +228,10 @@ def test_data_latest(results):
 def test_data_latest_data(results):
     data_latest: dict = results["data_latest"]
 
-    assert "data" in data_latest.keys()
+    assert "devices" in data_latest.keys()
 
-    if len(data_latest["data"]) > 0:
-        data = data_latest["data"][0]
+    if len(data_latest["devices"]) > 0:
+        data = data_latest["devices"][0]["data"]
         verify_keys(DATA_LATEST_DATA_KEYS, data)
     else:
         pytest.skip('Skipping: No data to test in data_latest["data"]')
@@ -226,3 +247,29 @@ def test_data_latest_devices(results):
         verify_keys(DATA_LATEST_DEVICES_KEYS, devices)
     else:
         pytest.skip('Skipping: No devices to test in data_latest["devices"]')
+
+
+def test_get_user_settings_temp():
+    client = Client("username", "password", None)
+
+    # Case userSettings.temp is defined
+    data_latest = {
+        "devices": [{"threshold": {"temp": {"aMax": 104}}}],
+        "userSettings": {"temp": "c"},
+    }
+    assert client.get_user_settings_temp(data_latest) == "c"
+    # Case userSettings.temp is undefined, aMax is 104
+    data_latest = {"devices": [{"threshold": {"temp": {"aMax": 104}}}]}
+    assert client.get_user_settings_temp(data_latest) == "f"
+
+    # Case userSettings.temp is undefined, aMax is not 104
+    data_latest = {"devices": [{"threshold": {"temp": {"aMax": 40}}}]}
+    assert client.get_user_settings_temp(data_latest) == "c"
+
+    # Case userSettings.temp is undefined, aMax is undefined
+    data_latest = {"devices": [{"threshold": {"temp": {}}}]}
+    assert client.get_user_settings_temp(data_latest) is None
+
+    # Case userSettings.temp is undefined, devices is undefined
+    data_latest = {}
+    assert client.get_user_settings_temp(data_latest) is None
