@@ -1,4 +1,5 @@
 """Define various utility functions."""
+
 import json
 from codecs import decode, encode
 from hashlib import md5, sha256
